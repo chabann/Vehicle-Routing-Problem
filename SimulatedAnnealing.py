@@ -2,6 +2,7 @@ import numpy as np
 import numpy.random as rnd
 import random
 from math import sqrt
+import matplotlib.pyplot as plt
 
 
 def distances():
@@ -111,7 +112,21 @@ for iter in range(iterMax):
     if currentTemp <= endTemperature:
         break
 
-np.append(state, state[0])
+state = np.append(state, state[0])
 print("state: ", state, "Energy: ", currentEnergy)
+
+coords = np.transpose(coords)
+
+plt.plot(coords[1], coords[2], 'ro')
+coords_state = []
+
+for i in range(dim + 1):
+    coords_state.append([coords[1][state[i]], coords[2][state[i]]])
+    
+coords_state = np.transpose(coords_state)
+plt.plot(coords_state[0], coords_state[1], 'b-')
+
+plt.grid()
+plt.show()
 
 
