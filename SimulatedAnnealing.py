@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.random as rnd
+import random
 from math import sqrt
 
 
@@ -15,18 +16,14 @@ def distances():
         if line.find("NAME:") >= 0:
             line1 = line.split(' ')
             nametask = line1[-1]
-            # print('name : ', name)
         elif line.find("DIMENSION:") >= 0:
             line1 = line.split(' ')
             dimension = int(line1[-1])
-            # print("dimension : ", dimension)
         elif line.find("NODE_COORD_SECTION") >= 0:
             start_coords = 1
-            # print("start of coords")
         elif start_coords == 1:
             if line.find("EOF") >= 0:
                 start_coords = 0
-                # print("end")
             else:
                 line = line.split(' ')
                 coordinates.append([])
@@ -34,11 +31,11 @@ def distances():
                     coordinates[num].append(float(line[i]))
                 num += 1
 
-    distance = np.zeros(dimension)
+    distance = []
     for i in range(dimension):
-        np.append(distance, [])
+        distance.append([])
         for j in range(dimension):
-            np.append(distance[i], sqrt((coordinates[i][1] - coordinates[j][1])**2 + (coordinates[i][2] - coordinates[j][2])**2))
+            distance[i].append(sqrt((coordinates[i][1] - coordinates[j][1])**2 + (coordinates[i][2] - coordinates[j][2])**2))
     return nametask, dimension, coordinates, distance
 
 
@@ -53,18 +50,21 @@ def calculateEnergy(x, dis):
 def GenerateStateCandidate(x):
     n = len(x)
     rnd.seed(1000)
-    leftbound = rnd.random(n)
-    rightbound = rnd.random(n)
+    leftbound = random.randint(0, n)
+    rightbound = random.randint(0, n)
 
     if leftbound < rightbound:
-        subx = x[leftbound : rightbound]
-        suby = x.pop(leftbound, rightbound)
-        print(subx, suby)
+        subx0 = x[0: leftbound]
+        subx = x[leftbound: rightbound]
+        subx1 = x[rightbound: n]
     else:
-        subx  = x[rightbound : leftbound]
-        suby = x.pop(rightbound, leftbound)
-        print(subx, suby)
-    subx.reverse()
+        subx0 = x[0: rightbound]
+        subx = x[rightbound: leftbound]
+        subx1 = x[leftbound: n]
+    subx = np.flip(subx)
+    x1 = np.hstack((subx0, subx, subx1))
+    # print("state candidate:", x1)
+    return x1
 
 
 def GetTransitionProbability(E, t):
@@ -80,24 +80,24 @@ def MakeTransit(p):
 
 
 def DecreaseTemperature(t, i):
-    return t * 0.2 / i
+    return t * 0.2 / (i + 1)
 
 
 name, dim, coords, distance = distances()
-print("Coordinates", coords, "dimension: ", dim)
+# print("Coordinates", coords, "dimension: ", dim)
 
 initialTemperature = 1000
 endTemperature = 0.000001
 iterMax = 50000
 
 state = rnd.permutation(dim)  # задаём вектор начального состояния, как случайную перестановку городов
-print(state)
+
 currentEnergy = calculateEnergy(state, distance)
 currentTemp = initialTemperature
 
 for iter in range(iterMax):
-    stateCandidate = GenerateStateCandidate(state) # получаем состояние - кандидат
-    candidateEnergy = calculateEnergy(stateCandidate, distance) # вычисляем его энергию
+    stateCandidate = GenerateStateCandidate(state)   # получаем состояние - кандидат
+    candidateEnergy = calculateEnergy(stateCandidate, distance)  # вычисляем его энергию
     if candidateEnergy < currentEnergy:
         currentEnergy = candidateEnergy
         state = stateCandidate
