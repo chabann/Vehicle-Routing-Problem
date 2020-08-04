@@ -1,7 +1,6 @@
 import numpy as np
 import numpy.random as rnd
 import random
-import matplotlib.pyplot as plt
 
 from distances import distances
 
@@ -50,49 +49,49 @@ def DecreaseTemperature(t, i):
     return t * 0.2 / (i + 1)
 
 
-name, dim, coords, distance = distances()
-# print("Coordinates", coords, "dimension: ", dim)
+def shift(lst):
+    lst = np.append(lst, lst[0])
+    lst = np.delete(lst, 0)
+    return lst
 
-initialTemperature = 1000
-endTemperature = 0.000001
-iterMax = 50000
 
-state = rnd.permutation(dim)  # задаём вектор начального состояния, как случайную перестановку городов
+def main():
+    name, dim, coords, distance = distances()
+    # print("Coordinates", coords, "dimension: ", dim)
 
-currentEnergy = calculateEnergy(state, distance)
-currentTemp = initialTemperature
+    initialTemperature = 1000
+    endTemperature = 0.000001
+    iterMax = 50000
 
-for iter in range(iterMax):
-    stateCandidate = GenerateStateCandidate(state)   # получаем состояние - кандидат
-    candidateEnergy = calculateEnergy(stateCandidate, distance)  # вычисляем его энергию
-    if candidateEnergy < currentEnergy:
-        currentEnergy = candidateEnergy
-        state = stateCandidate
-    else:
-        probability = GetTransitionProbability(candidateEnergy - currentEnergy, currentTemp)
-        if MakeTransit(probability):
+    state = rnd.permutation(dim)  # задаём вектор начального состояния, как случайную перестановку городов
+
+    currentEnergy = calculateEnergy(state, distance)
+    currentTemp = initialTemperature
+
+    for iter in range(iterMax):
+        stateCandidate = GenerateStateCandidate(state)   # получаем состояние - кандидат
+        candidateEnergy = calculateEnergy(stateCandidate, distance)  # вычисляем его энергию
+        if candidateEnergy < currentEnergy:
             currentEnergy = candidateEnergy
             state = stateCandidate
-    currentTemp = DecreaseTemperature(initialTemperature, iter)  # уменьшаем температуру
+        else:
+            probability = GetTransitionProbability(candidateEnergy - currentEnergy, currentTemp)
+            if MakeTransit(probability):
+                currentEnergy = candidateEnergy
+                state = stateCandidate
+        currentTemp = DecreaseTemperature(initialTemperature, iter)  # уменьшаем температуру
 
-    if currentTemp <= endTemperature:
-        break
+        if currentTemp <= endTemperature:
+            break
 
-state = np.append(state, state[0])
-print("state: ", state, "Energy: ", currentEnergy)
+    while state[0] != 0:
+        state = shift(state)
 
-coords = np.transpose(coords)
+    state = np.append(state, state[0])
+    print("state: ", state, "Energy: ", currentEnergy)
 
-plt.plot(coords[1], coords[2], 'ro')
-coords_state = []
+    coords = np.transpose(coords)
 
-for i in range(dim + 1):
-    coords_state.append([coords[1][state[i]], coords[2][state[i]]])
-    
-coords_state = np.transpose(coords_state)
-plt.plot(coords_state[0], coords_state[1], 'b-')
-
-plt.grid()
-plt.show()
+    return state, currentEnergy, coords
 
 
